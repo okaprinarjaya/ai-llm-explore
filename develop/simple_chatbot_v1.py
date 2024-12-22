@@ -4,10 +4,10 @@ from typing import Annotated
 from typing_extensions import TypedDict
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.message import add_messages
-from langchain_community.tools.tavily_search import TavilySearchResults
 
 load_dotenv()
 
@@ -42,18 +42,20 @@ class BasicToolNode:
 tool_tavily_search = TavilySearchResults(max_results=2)
 tools = [tool_tavily_search]
 
-tool_node = BasicToolNode(tools=tools)
-
 memory = MemorySaver()
+
 llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
 llm_with_tools = llm.bind_tools(tools)
 
 # Node
-def chatbot(state: State):
+def chatbot_node(state: State):
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
-# Edge decision
-def route_tools(state: State):
+# Node
+tool_node = BasicToolNode(tools=tools)
+
+# Edge decision to next node
+def edge_route_decision(state: State):
     if isinstance(state, list):
         ai_message = state[-1]
     elif messages := state.get("messages", []):
@@ -68,14 +70,14 @@ def route_tools(state: State):
 
 # Design / setup the graph (workflow)
 graph_builder = StateGraph(State)
-graph_builder.add_node("chatbot", chatbot)
+graph_builder.add_node("chatbot", chatbot_node)
 graph_builder.add_node("tools", tool_node)
 
 graph_builder.add_edge(START, "chatbot")
 
 graph_builder.add_conditional_edges(
     "chatbot",
-    route_tools,
+    edge_route_decision,
     {"tools": "tools", END: END}
 )
 

@@ -17,11 +17,11 @@ class MyNode:
 graph_builder = StateGraph(State)
 
 graph_builder.add_node("a", MyNode("I'm A"))
-graph_builder.add_edge(START, "a")
-
 graph_builder.add_node("b", MyNode("I'm B"))
 graph_builder.add_node("c", MyNode("I'm C"))
 graph_builder.add_node("d", MyNode("I'm D"))
+
+graph_builder.add_edge(START, "a")
 graph_builder.add_edge("a", "b")
 graph_builder.add_edge("a", "c")
 graph_builder.add_edge("b", "d")

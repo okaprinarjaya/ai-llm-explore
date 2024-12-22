@@ -24,12 +24,12 @@ intermediates = ["b", "c", "d"]
 
 graph_builder = StateGraph(State)
 graph_builder.add_node("a", MyNode("I am A"))
-graph_builder.add_edge(START, "a")
-
 graph_builder.add_node("b", MyNode("I am B"))
 graph_builder.add_node("c", MyNode("I am C"))
 graph_builder.add_node("d", MyNode("I am D"))
 graph_builder.add_node("e", MyNode("I am E"))
+
+graph_builder.add_edge(START, "a")
 
 graph_builder.add_conditional_edges(
     "a",
