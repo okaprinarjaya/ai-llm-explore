@@ -1,9 +1,10 @@
 from dotenv import load_dotenv
+import pprint
 import json
 from typing import Annotated
 from typing_extensions import TypedDict
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import ToolMessage, HumanMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
@@ -54,6 +55,16 @@ def chatbot_node(state: State):
 # Node
 tool_node = BasicToolNode(tools=tools)
 
+# Node
+def bleketek_node(state: State):
+    return state
+    # return {"messages": [HumanMessage(content="I Hope you are doing well")]}
+
+# Node
+def ecekepret_node(state: State):
+    return state
+    # return {"messages": [HumanMessage(content="I Know you can help me")]}
+
 # Edge decision to next node
 def edge_route_decision(state: State):
     if isinstance(state, list):
@@ -72,8 +83,13 @@ def edge_route_decision(state: State):
 graph_builder = StateGraph(State)
 graph_builder.add_node("chatbot", chatbot_node)
 graph_builder.add_node("tools", tool_node)
+graph_builder.add_node("bleketek", bleketek_node)
+graph_builder.add_node("ecekepret", ecekepret_node)
 
 graph_builder.add_edge(START, "chatbot")
+# graph_builder.add_edge("chatbot", "bleketek")
+# graph_builder.add_edge("bleketek", "ecekepret")
+# graph_builder.add_edge("ecekepret", END)
 
 graph_builder.add_conditional_edges(
     "chatbot",
@@ -85,13 +101,20 @@ graph_builder.add_edge("tools", "chatbot")
 
 graph = graph_builder.compile(checkpointer=memory)
 
+## Generate graph image in png format
+# img = graph.get_graph().draw_mermaid_png()
+# with open("graph.png", "wb") as img_png:
+#     img_png.write(img)
+
 config = {"configurable": {"thread_id": "1"}}
 
 def stream_graph_updates(human_input: str):
     events = graph.stream({"messages": [HumanMessage(content=human_input)]}, config=config)
     for event in events:
         for value in event.values():
-            print("AI Assistant:", value["messages"][-1].content)
+            message_last = value["messages"][-1]
+            if not isinstance(message_last, ToolMessage) and message_last.content:
+                print("AI Assistant:", message_last.content)
 
 while True:
     human_input = input("Human (You): ")
