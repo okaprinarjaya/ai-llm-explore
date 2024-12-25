@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
-import pprint
 import json
 from typing import Annotated
 from typing_extensions import TypedDict
-from langchain_openai import ChatOpenAI
+# from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import ToolMessage, HumanMessage
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.graph import StateGraph, START, END
@@ -45,7 +45,8 @@ tools = [tool_tavily_search]
 
 memory = MemorySaver()
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+# llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7)
 llm_with_tools = llm.bind_tools(tools)
 
 # Node
@@ -83,8 +84,8 @@ def edge_route_decision(state: State):
 graph_builder = StateGraph(State)
 graph_builder.add_node("chatbot", chatbot_node)
 graph_builder.add_node("tools", tool_node)
-graph_builder.add_node("bleketek", bleketek_node)
-graph_builder.add_node("ecekepret", ecekepret_node)
+# graph_builder.add_node("bleketek", bleketek_node)
+# graph_builder.add_node("ecekepret", ecekepret_node)
 
 graph_builder.add_edge(START, "chatbot")
 # graph_builder.add_edge("chatbot", "bleketek")
@@ -103,7 +104,7 @@ graph = graph_builder.compile(checkpointer=memory)
 
 ## Generate graph image in png format
 # img = graph.get_graph().draw_mermaid_png()
-# with open("graph.png", "wb") as img_png:
+# with open("tmp/graph.png", "wb") as img_png:
 #     img_png.write(img)
 
 config = {"configurable": {"thread_id": "1"}}
