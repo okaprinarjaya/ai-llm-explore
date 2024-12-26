@@ -10,12 +10,14 @@ db = "/mnt/c/Users/okapr/OneDrive/Documents/db-sqlite/travel2.sqlite"
 
 @tool
 def fetch_user_flight_information(config: RunnableConfig):
-    """Fetch all tickets for the user along with corresponding flight information and seat assignments.
+    """
+    Fetch all tickets for the user along with corresponding flight information and seat assignments.
 
     Returns:
         A list of dictionaries where each dictionary contains the ticket details,
         associated flight details, and the seat assignments for each ticket belonging to the user.
     """
+
     configuration = config.get("configurable", {})
     passenger_id = configuration.get("passenger_id", None)
 
@@ -41,12 +43,12 @@ def fetch_user_flight_information(config: RunnableConfig):
         tickets tix
         JOIN ticket_flights tf ON tix.ticket_no = tf.ticket_no
         JOIN flights f ON tf.flight_id = f.flight_id
-        JOIN boarding_passes bp ON bp.ticket_no = t.ticket_no AND bp.flight_id = f.flight_id
+        JOIN boarding_passes bp ON bp.ticket_no = tix.ticket_no AND bp.flight_id = f.flight_id
     WHERE 
-        t.passenger_id = ?
+        tix.passenger_id = ?
     """
 
-    cursor.execute(query, (passenger_id))
+    cursor.execute(query, (passenger_id,))
     rows = cursor.fetchall()
     column_names = [column[0] for column in cursor.description]
     results = [dict(zip(column_names, row)) for row in rows]
@@ -80,7 +82,7 @@ def search_flights(
         params.append(arrival_airport)
 
     if start_time:
-        query += " AND schedule_departure >= ?"
+        query += " AND scheduled_departure >= ?"
         params.append(start_time)
 
     if end_time:
@@ -118,7 +120,7 @@ def update_ticket_to_new_flight(
     dbconn = sqlite3.connect(db)
     cursor = dbconn.cursor()
 
-    cursor.execute("SELECT departure_airport, arrival_airport, schedule_departure FROM flights WHERE flight_id = ?", (new_flight_id))
+    cursor.execute("SELECT departure_airport, arrival_airport, scheduled_departure FROM flights WHERE flight_id = ?", (new_flight_id))
     new_flight = cursor.fetchone()
 
     if not new_flight:
@@ -131,7 +133,7 @@ def update_ticket_to_new_flight(
     new_flight_dict = dict(zip(column_names, new_flight))
     timezone = pytz.timezone("Asia/Jakarta")
     current_time = datetime.now(tz=timezone)
-    departure_time = datetime.strptime(new_flight_dict["schedule_departure"], "%Y-%m-%d %H:%M:%S.%f%z")
+    departure_time = datetime.strptime(new_flight_dict["scheduled_departure"], "%Y-%m-%d %H:%M:%S.%f%z")
     time_until = (departure_time - current_time).total_seconds()
 
     if time_until < (3 * 3600):

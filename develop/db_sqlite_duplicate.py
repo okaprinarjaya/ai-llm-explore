@@ -10,6 +10,7 @@ local_file = "tmp/travel2.sqlite"
 # The backup lets us restart for each tutorial section
 backup_file = "tmp/travel2.backup.sqlite"
 overwrite = False
+
 if overwrite or not os.path.exists(local_file):
     response = requests.get(db_url)
     response.raise_for_status()  # Ensure the request was successful
@@ -21,15 +22,14 @@ if overwrite or not os.path.exists(local_file):
 # Convert the flights to present time for our tutorial
 def update_dates(file):
     shutil.copy(backup_file, file)
-    conn = sqlite3.connect(file)
-    cursor = conn.cursor()
+    dbconn = sqlite3.connect(file)
 
     tables = pd.read_sql(
-        "SELECT name FROM sqlite_master WHERE type='table';", conn
+        "SELECT name FROM sqlite_master WHERE type='table';", dbconn
     ).name.tolist()
     tdf = {}
     for t in tables:
-        tdf[t] = pd.read_sql(f"SELECT * from {t}", conn)
+        tdf[t] = pd.read_sql(f"SELECT * from {t}", dbconn)
 
     example_time = pd.to_datetime(
         tdf["flights"]["actual_departure"].replace("\\N", pd.NaT)
@@ -54,13 +54,14 @@ def update_dates(file):
         )
 
     for table_name, df in tdf.items():
-        df.to_sql(table_name, conn, if_exists="replace", index=False)
+        df.to_sql(table_name, dbconn, if_exists="replace", index=False)
+
     del df
     del tdf
-    conn.commit()
-    conn.close()
+
+    dbconn.commit()
+    dbconn.close()
 
     return file
 
-
-db = update_dates(local_file)
+update_dates(local_file)
