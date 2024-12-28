@@ -4,13 +4,13 @@ from dotenv import load_dotenv
 # from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.runnables import Runnable, RunnableConfig, RunnableSequence
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import Runnable, RunnableConfig
+from langchain_core.messages import HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
 from state_cs_ota import State
-from tool_flight import fetch_user_flight_information, search_flights, update_ticket_to_new_flight, cancel_ticket
+from tool_flight import search_flights, update_ticket_to_new_flight, cancel_ticket
 from tool_car_rental import search_car_rentals, book_car_rental, update_car_rental, cancel_car_rental
 from tool_hotel import search_hotels, book_hotel, update_hotel, cancel_hotel
 from tool_excursion import search_trip_recommendations, book_excursion, update_excursion, cancel_excursion
@@ -274,20 +274,6 @@ class ToBookExcursion(BaseModel):
             }
         }
 
-
-system_message = """
-You are a helpful customer support assistant for Swiss Airlines.
-Use the provided tools to search for flights, company policies, and other information to assist the user's queries.
-When searching, be persistent. Expand your query bounds if the first search returns no results.
-If a search comes up empty, expand your search before giving up.
-
-Current user:
-<User>
-{user_info}
-</User>
-
-Current time: {time}.
-"""
 
 primary_assistant_prompt = ChatPromptTemplate.from_messages(
     [

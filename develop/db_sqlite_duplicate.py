@@ -6,9 +6,9 @@ import pandas as pd
 import requests
 
 db_url = "https://storage.googleapis.com/benchmarks-artifacts/travel-db/travel2.sqlite"
-local_file = "tmp/travel2.sqlite"
+local_file = "/mnt/c/Users/okapr/OneDrive/Documents/db-sqlite/travel2.sqlite"
 # The backup lets us restart for each tutorial section
-backup_file = "tmp/travel2.backup.sqlite"
+backup_file = "/mnt/c/Users/okapr/OneDrive/Documents/db-sqlite/travel2.backup.sqlite"
 overwrite = False
 
 if overwrite or not os.path.exists(local_file):
